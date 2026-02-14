@@ -60,5 +60,34 @@ class InventoryRepository(BaseRepository[Inventory, InventoryCreate, InventoryUp
         result = await db.execute(query)
         return result.scalar() or 0
 
+    async def get_snapshots(
+        self,
+        db: AsyncSession,
+        *,
+        store_id: Optional[int] = None,
+        skip: int = 0,
+        limit: int = 50
+    ) -> Tuple[List[InventorySnapshot], int]:
+        from app.models.inventory import InventorySnapshot
+        from app.models.product import Product
+
+        query = (
+            select(InventorySnapshot)
+            .join(Inventory)
+            .join(Product)
+            .order_by(InventorySnapshot.timestamp.desc())
+        )
+        count_query = select(func.count()).select_from(InventorySnapshot)
+
+        if store_id:
+            query = query.filter(Inventory.store_id == store_id)
+            count_query = count_query.join(Inventory).filter(
+                Inventory.store_id == store_id
+            )
+
+        total_count = (await db.execute(count_query)).scalar_one()
+        result = await db.execute(query.offset(skip).limit(limit))
+        return list(result.scalars().all()), total_count
+
 
 inventory_repo = InventoryRepository(Inventory)

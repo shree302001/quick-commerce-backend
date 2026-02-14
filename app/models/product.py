@@ -34,3 +34,6 @@ class Product(Base):
     category: Mapped["Category"] = relationship(
         back_populates="products", lazy="joined"
     )
+    inventory_items: Mapped[List["Inventory"]] = relationship(
+        back_populates="product", lazy="selectin"
+    )

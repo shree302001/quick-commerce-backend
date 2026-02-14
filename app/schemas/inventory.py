@@ -1,4 +1,5 @@
 from typing import Optional, List
+from datetime import datetime
 from app.schemas.base import BaseSchema
 
 
@@ -36,3 +37,20 @@ class InventoryListResponse(BaseSchema):
 class AggregateStockResponse(BaseSchema):
     product_id: int
     total_available_quantity: int
+
+
+class InventorySnapshotResponse(BaseSchema):
+    id: int
+    inventory_id: int
+    product_name: str
+    quantity: int
+    reserved_quantity: int
+    timestamp: datetime
+    reason: Optional[str] = None
+
+
+class InventorySnapshotListResponse(BaseSchema):
+    items: List[InventorySnapshotResponse]
+    total: int
+    skip: int
+    limit: int

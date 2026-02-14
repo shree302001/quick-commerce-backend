@@ -6,6 +6,7 @@ from app.schemas.inventory import (
     InventoryResponse,
     InventoryListResponse,
     AggregateStockResponse,
+    InventorySnapshotListResponse,
 )
 from app.services.inventory_service import inventory_service
 from app.core.logging import add_cache_headers
@@ -93,3 +94,40 @@ async def debug_reserved_stock(
 
     result = await db.execute(query)
     return list(result.scalars().all())
+
+
+@router.get("/snapshots", response_model=InventorySnapshotListResponse)
+async def list_inventory_snapshots(
+    db: AsyncSession = Depends(deps.get_db),
+    store_id: Optional[int] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+):
+    """
+    Retrieve historical inventory snapshots for timeline visualization.
+    """
+    from app.schemas.inventory import (
+        InventorySnapshotListResponse,
+        InventorySnapshotResponse,
+    )
+
+    items, total = await inventory_service.get_snapshots(
+        db, store_id=store_id, skip=skip, limit=limit
+    )
+
+    # Manual mapping to include product name from joined relationship
+    resp_items = []
+    for item in items:
+        resp_items.append(
+            InventorySnapshotResponse(
+                id=item.id,
+                inventory_id=item.inventory_id,
+                product_name=item.inventory.product.name,
+                quantity=item.quantity,
+                reserved_quantity=item.reserved_quantity,
+                timestamp=item.timestamp,
+                reason=item.reason,
+            )
+        )
+
+    return {"items": resp_items, "total": total, "skip": skip, "limit": limit}

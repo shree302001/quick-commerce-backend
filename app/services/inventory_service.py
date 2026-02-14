@@ -95,5 +95,16 @@ class InventoryService:
             db, product_id=product_id, store_id=store_id
         )
 
+    async def get_snapshots(
+        self,
+        db: AsyncSession,
+        store_id: Optional[int] = None,
+        skip: int = 0,
+        limit: int = 50,
+    ) -> Tuple[List[InventorySnapshot], int]:
+        return await inventory_repo.get_snapshots(
+            db, store_id=store_id, skip=skip, limit=limit
+        )
+
 
 inventory_service = InventoryService()
