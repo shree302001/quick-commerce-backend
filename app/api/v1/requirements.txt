@@ -3,6 +3,8 @@ uvicorn
 sqlalchemy
 asyncpg
 pydantic
+pydantic-settings
+alembic
 redis
 python-dotenv
 httpx
